@@ -1,0 +1,77 @@
+erDiagram
+    USERS {
+        int id PK
+        string username UK
+        string password_hash
+        datetime created_at
+        datetime updated_at
+    }
+
+    PRODUCTS {
+        int id PK
+        string asin UK
+        text title
+        string category
+        float price
+        float rating
+        int reviews_count
+        text url
+        text image_url
+        int bestseller_rank
+        datetime created_at
+        datetime updated_at
+    }
+
+    TREND_SNAPSHOTS {
+        int id PK
+        int product_id FK
+        string keyword
+        string direction
+        int latest_value
+        float avg_first_half
+        float avg_second_half
+        int points_count
+        datetime created_at
+    }
+
+    PRODUCT_SCORES {
+        int id PK
+        int product_id FK,UK
+        int score
+        text reasoning
+        float boost_score
+        string source
+        datetime updated_at
+    }
+
+    PAST_PRODUCTS {
+        int id PK
+        text title
+        string category
+        text keywords
+        text note
+        datetime created_at
+    }
+
+    SCRAPE_RUNS {
+        int id PK
+        string kind
+        string status
+        int items_collected
+        text detail
+        datetime created_at
+        datetime finished_at
+    }
+
+    AMAZON_CATEGORIES {
+        int id PK
+        string slug UK
+        string name
+        bool enabled
+        bool available
+        datetime created_at
+        datetime updated_at
+    }
+
+    PRODUCTS ||--o{ TREND_SNAPSHOTS : has
+    PRODUCTS ||--o| PRODUCT_SCORES : receives
