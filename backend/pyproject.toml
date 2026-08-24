@@ -1,0 +1,123 @@
+[project]
+name = "trendscout"
+version = "0.1.0"
+description = "Amazon trend scouting, AI scoring and analytics for e-commerce buyers"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    # Web framework and ASGI
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.52.4",
+    "python-multipart>=0.0.32",     # CSV upload on Sales Boost
+    # Settings and validation
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.15.0",
+    # Database (PostgreSQL 18, async)
+    "sqlalchemy[asyncio]>=2.0.52",
+    "alembic>=1.19.1",
+    "asyncpg>=0.31.0",
+    "greenlet>=3.5.5",              # sqlalchemy async runtime
+    # Async task queue and scheduler.
+    "taskiq>=0.12.5",
+    "taskiq-redis>=1.2.3",
+    "redis>=8.1.0",
+    # Browser-based data collection
+    "playwright>=1.62.0",
+    # LLM scoring — provider picked at runtime from LLM_PROVIDER
+    "google-genai>=2.19.0",
+    "anthropic>=1.0.0",
+    "openai>=3.3.1",
+    # Auth — PyJWT (maintained), argon2id password hashing
+    "PyJWT[crypto]>=2.13.0",
+    "argon2-cffi>=25.1.0",
+    # Serialization
+    "orjson>=3.12.0",
+]
+
+[dependency-groups]
+lint = [
+    "ruff>=0.16.4",
+    "pyright[nodejs]>=1.1.409",
+]
+test = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "httpx>=0.28.1",
+]
+
+[tool.uv]
+package = false
+# Local `uv sync` installs the full toolchain; the image uses --no-default-groups.
+default-groups = ["lint", "test"]
+
+# ──────────────────────────────────────────────
+# Ruff — linter + formatter
+# ──────────────────────────────────────────────
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+extend-exclude = ["alembic/versions", ".venv"]
+
+[tool.ruff.lint]
+# E/F/W — correctness; I — imports; N — naming; UP — modern Python.
+# B/SIM/RET/C4 — likely bugs and needless control flow; ASYNC — event-loop misuse.
+# BLE — blind excepts; RUF/PLE/PLW — high signal-to-noise checks.
+select = ["E", "F", "W", "I", "N", "UP", "B", "BLE", "SIM", "RET", "C4", "ASYNC", "RUF", "PLE", "PLW"]
+ignore = [
+    "B008",   # Depends() in defaults — the FastAPI standard pattern
+    "RUF001", # ambiguous unicode — product titles carry mixed scripts
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The LLM call is the fallback boundary: any provider failure (quota, network,
+# malformed JSON) must degrade to the deterministic formula, not crash the run.
+"app/scoring/engine.py" = ["BLE001"]
+# Each scheduled job is a queue-level top guard — a failure is recorded in
+# ScrapeRun and must not kill the worker.
+"app/tasks/jobs.py" = ["BLE001"]
+# Assertions are the native pytest API.
+"tests/**/*.py" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ──────────────────────────────────────────────
+# Pyright — static type checking
+# ──────────────────────────────────────────────
+[tool.pyright]
+include = ["app"]
+extraPaths = ["."]
+venvPath = "."
+venv = ".venv"
+exclude = ["**/__pycache__", ".venv", "alembic/versions"]
+pythonVersion = "3.14"
+typeCheckingMode = "basic"
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+reportUnusedImport = "warning"
+reportUnusedVariable = "warning"
+reportDuplicateImport = "warning"
+
+# Vendor SDK stubs are only partially typed; the strict bar below would report
+# their gaps rather than ours.
+[[tool.pyright.executionEnvironments]]
+root = "app/scoring/llm"
+
+# Scoring is the one layer with no external I/O, so it can hold a stricter bar.
+[[tool.pyright.executionEnvironments]]
+root = "app/scoring"
+reportUnknownParameterType = "warning"
+reportUnknownVariableType = "warning"
+reportUnknownMemberType = "warning"
+
+# ──────────────────────────────────────────────
+# Pytest
+# ──────────────────────────────────────────────
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = ["--strict-config", "--strict-markers"]
