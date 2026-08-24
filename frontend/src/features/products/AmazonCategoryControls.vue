@@ -15,6 +15,7 @@ import { browserRunActive } from "./runState";
 
 const POLL_INTERVAL_MS = 2500;
 const RUN_CLOCK_TOLERANCE_MS = 5000;
+const SELECTED_CATEGORY_PREVIEW_LIMIT = 5;
 
 const emit = defineEmits<{ finished: [] }>();
 
@@ -38,6 +39,18 @@ const persisted = computed(() =>
 const normalizedSelection = computed(() => [...selected.value].sort());
 const dirty = computed(
   () => JSON.stringify(persisted.value) !== JSON.stringify(normalizedSelection.value),
+);
+const selectedCategoryNames = computed(() => {
+  const selectedSlugs = new Set(selected.value);
+  return categories.value
+    .filter((category) => selectedSlugs.has(category.slug))
+    .map((category) => category.name);
+});
+const visibleSelectedCategoryNames = computed(() =>
+  selectedCategoryNames.value.slice(0, SELECTED_CATEGORY_PREVIEW_LIMIT),
+);
+const hiddenSelectedCategoryCount = computed(() =>
+  Math.max(selectedCategoryNames.value.length - SELECTED_CATEGORY_PREVIEW_LIMIT, 0),
 );
 const latest = computed(
   () => (kind: RunKind) => latestRuns.value.find((run) => run.kind === kind),
@@ -168,6 +181,29 @@ void Promise.all([loadCategories(), loadRuns()]);
       </div>
     </header>
 
+    <div
+      v-if="!expanded && selectedCategoryNames.length"
+      class="selected-preview"
+      aria-label="Selected Amazon categories"
+    >
+      <span
+        v-for="categoryName in visibleSelectedCategoryNames"
+        :key="categoryName"
+        class="category-chip"
+        :title="categoryName"
+      >
+        {{ categoryName }}
+      </span>
+      <button
+        v-if="hiddenSelectedCategoryCount"
+        class="category-chip category-chip--more"
+        type="button"
+        @click="expanded = true"
+      >
+        +{{ hiddenSelectedCategoryCount }} more · show all
+      </button>
+    </div>
+
     <div v-if="expanded" id="amazon-category-panel" class="category-panel">
       <div class="category-panel__toolbar">
         <div class="selection-actions">
@@ -285,6 +321,43 @@ void Promise.all([loadCategories(), loadRuns()]);
   color: var(--text-muted);
   font-size: 0.75rem;
   white-space: nowrap;
+}
+
+.selected-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.category-chip {
+  max-width: 15rem;
+  padding: 0.16rem 0.42rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  color: var(--accent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.category-chip--more {
+  flex: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.category-chip--more:hover,
+.category-chip--more:focus-visible {
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
 }
 
 .toggle-button {

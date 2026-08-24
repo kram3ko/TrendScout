@@ -56,7 +56,8 @@ LLM key and uses the deterministic formula automatically.
 The dashboard keeps collection controls, filters, score provenance and the
 written rationale together. `AI score` identifies an LLM verdict; `Formula`
 shows that the deterministic fallback produced the result. The Amazon department
-selector stays collapsed until it is needed, keeping the product list in view.
+selector stays collapsed until it is needed, while selected departments remain
+visible as compact badges above the product list.
 Trend cards expose the query, current relative interest (`0–100`), direction,
 sample count and collection time. The run status reports how many product trend
 snapshots were saved; it is not an interest score.
