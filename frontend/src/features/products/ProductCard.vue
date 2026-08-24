@@ -69,22 +69,19 @@ defineProps<{ product: Product }>();
   display: grid;
   place-items: center;
   aspect-ratio: 1;
+  padding: 0.5rem;
   border-radius: var(--radius-sm);
-  background: var(--surface-muted);
+  background: #fff;
   overflow: hidden;
 }
 
 .product__media img {
+  width: 100%;
+  height: 100%;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   mix-blend-mode: multiply;
-}
-
-@media (prefers-color-scheme: dark) {
-  .product__media img {
-    mix-blend-mode: normal;
-  }
 }
 
 .product__body {
