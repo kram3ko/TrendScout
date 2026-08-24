@@ -1,0 +1,85 @@
+name: trendscout
+
+x-backend: &backend
+  build:
+    context: ./backend
+  # Optional on purpose: the stack must come up with `docker compose up --build`
+  # alone. Copy .env.example to .env only to override the defaults.
+  env_file:
+    - path: .env
+      required: false
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-trendscout}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trendscout}
+      POSTGRES_DB: ${POSTGRES_DB:-trendscout}
+    volumes:
+      # Postgres 18 keeps its data in a versioned subdirectory, so the volume
+      # mounts one level up — mounting .../data directly is refused.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trendscout}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "no"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    <<: *backend
+    command: ["api"]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  # Browser work lives here: one worker, because concurrent Chromium instances
+  # compete for RAM long before the event loop becomes the bottleneck.
+  worker:
+    <<: *backend
+    command: ["worker"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      api: { condition: service_healthy }
+    shm_size: 1gb
+
+  scheduler:
+    <<: *backend
+    command: ["scheduler"]
+    depends_on:
+      redis: { condition: service_healthy }
+      api: { condition: service_healthy }
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
