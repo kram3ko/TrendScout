@@ -18,3 +18,9 @@ export interface CsvImportReport {
   imported: number;
   skipped: { line: number; error: string }[];
 }
+
+export interface AmazonCategoryOption {
+  slug: string;
+  name: string;
+  enabled: boolean;
+}

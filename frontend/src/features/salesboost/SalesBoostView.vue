@@ -7,14 +7,21 @@ import { ApiError } from "@/shared/http";
 import {
   createPastProduct,
   deletePastProduct,
+  fetchAmazonCategories,
   fetchPastProducts,
   importPastProducts,
 } from "./api";
-import type { CsvImportReport, PastProduct, PastProductDraft } from "./types";
+import type {
+  AmazonCategoryOption,
+  CsvImportReport,
+  PastProduct,
+  PastProductDraft,
+} from "./types";
 
 const CSV_TEMPLATE = "title,category,keywords,note";
 
 const items = ref<PastProduct[]>([]);
+const categories = ref<AmazonCategoryOption[]>([]);
 const loading = ref(true);
 const error = ref("");
 const report = ref<CsvImportReport | null>(null);
@@ -30,7 +37,10 @@ function report_error(caught: unknown, fallback: string): void {
 async function load(): Promise<void> {
   loading.value = true;
   try {
-    items.value = await fetchPastProducts();
+    [items.value, categories.value] = await Promise.all([
+      fetchPastProducts(),
+      fetchAmazonCategories(),
+    ]);
   } catch (caught) {
     report_error(caught, "Could not load past products");
   } finally {
@@ -105,8 +115,16 @@ void load();
 
       <label class="field">
         <span>Category</span>
-        <input v-model="draft.category" required maxlength="128" placeholder="lawn-garden" />
+        <select v-model="draft.category" required :disabled="loading || !categories.length">
+          <option disabled value="">Select an Amazon category</option>
+          <option v-for="category in categories" :key="category.slug" :value="category.name">
+            {{ category.name }}
+          </option>
+        </select>
       </label>
+      <p v-if="!loading && !categories.length" class="muted hint">
+        Discover Amazon categories on the dashboard first.
+      </p>
 
       <label class="field">
         <span>Keywords</span>
