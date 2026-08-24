@@ -23,7 +23,7 @@ from app.scraping.category_service import AmazonCategoryService
 from app.scraping.enums import RunKind, RunStatus
 from app.scraping.models import AmazonCategory, ScrapeRun
 from app.scraping.service import RunService
-from app.scraping.trends import TrendsScraper
+from app.scraping.trends import TrendsRateLimitedError, TrendsScraper
 from app.tasks.broker import SCRAPE_CRON, broker
 
 logger = logging.getLogger(__name__)
@@ -110,6 +110,9 @@ async def collect_trends() -> None:
 
         try:
             collected = await _collect_trends_for(session, products, settings)
+        except TrendsRateLimitedError as error:
+            await runs.finish(run, RunStatus.BLOCKED, detail=str(error))
+            return
         except Exception as error:
             logger.exception("Trends collection failed")
             await runs.finish(run, RunStatus.FAILED, detail=_short(error))

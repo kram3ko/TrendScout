@@ -60,9 +60,7 @@ class ScoringEngine:
 
         return [self._merge(item, verdict) for item, verdict in zip(batch, verdicts, strict=True)]
 
-    def _merge(self, item: ScoringInput, verdict: LLMVerdict | None) -> ScoreResult:
-        if verdict is None:
-            return self._fallback.score(item)
+    def _merge(self, item: ScoringInput, verdict: LLMVerdict) -> ScoreResult:
         return ScoreResult(
             asin=item.asin,
             score=min(max(verdict.score, SCORE_MIN), SCORE_MAX),

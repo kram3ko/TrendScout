@@ -27,6 +27,10 @@ class TrendsUnavailableError(RuntimeError):
     """Google Trends refused the query — rate limit or an empty widget."""
 
 
+class TrendsRateLimitedError(TrendsUnavailableError):
+    """Google Trends temporarily rate-limited this server."""
+
+
 @dataclass(frozen=True, slots=True)
 class TrendResult:
     keyword: str
@@ -58,6 +62,8 @@ class TrendsScraper:
             for keyword in keywords:
                 try:
                     results[keyword] = await self._collect_one(page, keyword)
+                except TrendsRateLimitedError:
+                    raise
                 except TrendsUnavailableError, TimeoutError:
                     continue
             return results
@@ -81,8 +87,9 @@ class TrendsScraper:
                 timeout=NAV_TIMEOUT_MS,
             )
             if navigation is not None and navigation.status == TOO_MANY_REQUESTS:
-                raise TrendsUnavailableError(f"rate limited on '{keyword}'")
-            widget = await asyncio.wait_for(payload, timeout=WIDGET_TIMEOUT_S)
+                raise TrendsRateLimitedError("Google Trends rate limit; retry later")
+            async with asyncio.timeout(WIDGET_TIMEOUT_S):
+                widget = await payload
         finally:
             page.remove_listener("response", on_response)
 

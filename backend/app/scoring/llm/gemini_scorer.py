@@ -18,6 +18,7 @@ class GeminiScorer:
             system_instruction=SYSTEM_PROMPT,
             response_mime_type=JSON_MIME_TYPE,
             response_schema=LLMVerdictBatch,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )
 
     async def score_batch(self, items: Sequence[ScoringInput]) -> list[LLMVerdict]:
