@@ -5,11 +5,19 @@ reads Google Trends for each product, compares it against our own history of
 successful products, and produces a **0–100 score with a written rationale** in a
 dashboard — so buyers stop doing the research by hand.
 
-```
+```bash
+cp .env.example .env
+# Choose LLM_PROVIDER and set LLM_API_KEY in .env; leave the key empty for fallback.
 docker compose up --build      # → http://localhost:8080  ·  admin / admin123
 ```
 
-No `.env`, no migrations, no user creation — the stack comes up ready to use.
+Default credentials: username **`admin`**, password **`admin123`**.
+
+These credentials are seeded automatically even when no `.env` file exists.
+Override them with `BOOTSTRAP_USERNAME` and `BOOTSTRAP_PASSWORD` when needed.
+
+No migrations or user creation are required. The stack also starts without an
+LLM key and uses the deterministic formula automatically.
 
 ---
 
@@ -181,6 +189,18 @@ Docker with Compose v2. Nothing else.
 
 ### Start
 
+Copy the configuration template first:
+
+```bash
+cp .env.example .env
+```
+
+Choose `LLM_PROVIDER` (`gemini`, `anthropic`, `openai`, or `none`) and set the
+matching `LLM_API_KEY`. `LLM_MODEL` can be changed when the provider requires a
+different model. Leaving `LLM_API_KEY` empty enables the deterministic fallback.
+
+Then start the complete stack:
+
 ```bash
 docker compose up --build
 ```
@@ -230,6 +250,7 @@ override one.
 | `SCRAPE_INTERVAL_HOURS` | `6` | drives the scheduler's cron |
 | `TRENDS_GEO` | `US` | |
 | `TRENDS_MAX_PRODUCTS_PER_RUN` | `20` | Google Trends rate-limits aggressively |
+| `TRENDS_STORAGE_STATE_PATH` | `.runtime/google-trends.json` | Docker maps this to a persistent named volume |
 
 ---
 
