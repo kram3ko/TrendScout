@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     redis_url: str = "redis://redis:6379/0"
 
-    secret_key: str = "change-me-in-production"
+    secret_key: str = "change-me-before-exposing-this-service"
     access_token_ttl_minutes: int = 720
     bootstrap_username: str = "admin"
     bootstrap_password: str = "admin123"
