@@ -6,6 +6,7 @@ __pycache__/
 .pytest_cache/
 node_modules/
 dist/
+.runtime/
 frontend/vite.config.js
 frontend/vite.config.d.ts
 .DS_Store
