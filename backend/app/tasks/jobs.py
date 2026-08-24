@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Sequence
+from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from taskiq import TaskiqEvents, TaskiqState
@@ -29,6 +30,7 @@ from app.tasks.broker import SCRAPE_CRON, broker
 logger = logging.getLogger(__name__)
 
 SCRAPE_SCHEDULE = [{"cron": SCRAPE_CRON}]
+TRENDS_STORAGE_STATE = Path("/var/lib/trendscout-browser/google-trends.json")
 
 
 @broker.on_event(TaskiqEvents.WORKER_STARTUP)
@@ -171,7 +173,7 @@ async def _collect_trends_for(
     session: AsyncSession, products: Sequence[Product], settings: Settings
 ) -> int:
     keyword_by_product = {product.id: trends_keyword(product.title) for product in products}
-    async with browser_context() as context:
+    async with browser_context(TRENDS_STORAGE_STATE) as context:
         scraper = TrendsScraper(context, settings.trends_geo)
         results = await scraper.collect(sorted(set(keyword_by_product.values())))
 

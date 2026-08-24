@@ -1,5 +1,6 @@
 import asyncio
 import json
+import random
 from dataclasses import dataclass
 
 from playwright.async_api import BrowserContext, Response
@@ -16,6 +17,8 @@ XSSI_PREFIX_LENGTH = 5
 NAV_TIMEOUT_MS = 45_000
 WARMUP_SETTLE_MS = 3_000
 WIDGET_TIMEOUT_S = 25.0
+REQUEST_DELAY_MIN_MS = 3_000
+REQUEST_DELAY_MAX_MS = 8_000
 # Explore answers 429 when hit without the cookies the landing page hands out.
 TOO_MANY_REQUESTS = 429
 
@@ -59,7 +62,11 @@ class TrendsScraper:
             await page.wait_for_timeout(WARMUP_SETTLE_MS)
 
             results: dict[str, TrendResult] = {}
-            for keyword in keywords:
+            for index, keyword in enumerate(keywords):
+                if index:
+                    await page.wait_for_timeout(
+                        random.randint(REQUEST_DELAY_MIN_MS, REQUEST_DELAY_MAX_MS)
+                    )
                 try:
                     results[keyword] = await self._collect_one(page, keyword)
                 except TrendsRateLimitedError:

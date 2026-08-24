@@ -63,6 +63,8 @@ services:
       redis: { condition: service_healthy }
       api: { condition: service_healthy }
     shm_size: 1gb
+    volumes:
+      - browser-state:/var/lib/trendscout-browser
 
   scheduler:
     <<: *backend
@@ -83,3 +85,4 @@ services:
 volumes:
   postgres-data:
   redis-data:
+  browser-state:
