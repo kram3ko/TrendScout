@@ -52,7 +52,9 @@ shows that the deterministic fallback produced the result.
 ![Product dashboard with AI and formula scores](docs/images/dashboard.png)
 
 Sales Boost accepts past winners manually or from CSV and immediately uses
-category and keyword matches when the catalogue is rescored.
+category and keyword matches when the catalogue is rescored. Manual entries use
+the discovered Amazon category list, preventing silent mismatches between slugs
+and display names.
 
 ![Sales Boost product history and import form](docs/images/sales-boost.png)
 
@@ -289,7 +291,9 @@ resource for this workload.
 live Best Sellers navigation and stored in Postgres; the saved UI selection drives
 both manual and scheduled runs. Product links are normalized to ASIN before the
 catalogue upsert. Google Trends readings come from the browser session's timeline
-response and are stored as snapshots.
+response and are stored as snapshots. Trend snapshots stay fresh for three days;
+later runs reuse the saved browser session and pace keyword navigation to reduce
+unnecessary requests and handle Google's undocumented IP limits conservatively.
 
 **A product can chart in two categories at once.** One `INSERT … ON CONFLICT`
 statement may not touch the same row twice, so a scrape is deduplicated by ASIN

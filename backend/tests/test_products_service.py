@@ -1,4 +1,7 @@
-from app.products.service import deduplicate_by_asin
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock
+
+from app.products.service import TREND_REFRESH_AGE, ProductService, deduplicate_by_asin
 from app.scraping.amazon import ScrapedProduct
 
 
@@ -29,3 +32,19 @@ def test_distinct_products_are_kept_in_scrape_order():
     items = [scraped("B000000001", "kitchen"), scraped("B000000002", "kitchen")]
 
     assert [item.asin for item in deduplicate_by_asin(items)] == ["B000000001", "B000000002"]
+
+
+async def test_trends_selection_only_includes_missing_or_stale_snapshots() -> None:
+    session = type("Session", (), {"scalars": AsyncMock(return_value=[])})()
+    before = datetime.now(UTC)
+
+    assert await ProductService(session).select_for_trends(8) == []
+    after = datetime.now(UTC)
+
+    statement = session.scalars.await_args.args[0]
+    cutoff = next(
+        value for value in statement.compile().params.values() if isinstance(value, datetime)
+    )
+    assert "collected_at IS NULL" in str(statement)
+    assert before - TREND_REFRESH_AGE <= cutoff <= after - TREND_REFRESH_AGE
+    assert 8 in statement.compile().params.values()

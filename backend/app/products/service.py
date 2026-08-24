@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from dataclasses import asdict
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import Select, func, select
 from sqlalchemy.dialects.postgresql import insert
@@ -24,6 +25,7 @@ REFRESHED_COLUMNS = (
     "image_url",
     "bestseller_rank",
 )
+TREND_REFRESH_AGE = timedelta(days=3)
 
 
 class ProductService:
@@ -71,7 +73,7 @@ class ProductService:
         return list(await self._session.scalars(statement))
 
     async def select_for_trends(self, limit: int) -> list[Product]:
-        """Highest-ranked products with the oldest trend reading — the queue never starves."""
+        """Select missing or stale readings so stable trend data is not fetched repeatedly."""
         latest = (
             select(
                 TrendSnapshot.product_id.label("product_id"),
@@ -83,6 +85,10 @@ class ProductService:
         statement = (
             select(Product)
             .outerjoin(latest, latest.c.product_id == Product.id)
+            .where(
+                (latest.c.collected_at.is_(None))
+                | (latest.c.collected_at < datetime.now(UTC) - TREND_REFRESH_AGE)
+            )
             .order_by(latest.c.collected_at.asc().nulls_first(), Product.bestseller_rank.asc())
             .limit(limit)
         )
