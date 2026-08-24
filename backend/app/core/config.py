@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field, PostgresDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -32,6 +33,7 @@ class Settings(BaseSettings):
     scrape_interval_hours: int = Field(default=6, ge=1)
     trends_geo: str = "US"
     trends_max_products_per_run: int = Field(default=20, ge=1)
+    trends_storage_state_path: Path = Path(".runtime/google-trends.json")
 
     cors_origins: str = "http://localhost:5173,http://localhost:8080"
 
