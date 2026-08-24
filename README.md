@@ -55,15 +55,12 @@ LLM key and uses the deterministic formula automatically.
 
 The dashboard keeps collection controls, filters, score provenance and the
 written rationale together. `AI score` identifies an LLM verdict; `Formula`
-shows that the deterministic fallback produced the result.
-
-![Product dashboard with AI and formula scores](docs/images/dashboard.png)
-
-Trend cards expose the query, current relative interest (`0–100`), direction,
+shows that the deterministic fallback produced the result. Trend cards expose
+the query, current relative interest (`0–100`), direction,
 sample count and collection time. The run status reports how many product trend
 snapshots were saved; it is not an interest score.
 
-![Collected Google Trends data with an explanatory tooltip](docs/images/trend-results.png)
+![Product dashboard with collected Google Trends data](docs/images/dashboard.png)
 
 Sales Boost accepts past winners manually or from CSV and immediately uses
 category and keyword matches when the catalogue is rescored. Manual entries use
