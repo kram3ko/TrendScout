@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
+import { formatDate } from "@/shared/format";
+
 import type { Trend } from "./types";
 
 const props = defineProps<{ trend: Trend | null }>();
@@ -22,14 +24,31 @@ const title = computed(() =>
 </script>
 
 <template>
-  <span class="pill" :data-direction="direction" :title="title">
-    <span class="pill__dot" />
-    {{ label }}
-  </span>
+  <div class="trend">
+    <span class="pill" :data-direction="direction" tabindex="0">
+      <span class="pill__dot" />
+      {{ label }}
+      <template v-if="trend?.latest_value !== null && trend?.latest_value !== undefined">
+        · {{ trend.latest_value }}/100
+      </template>
+      <span class="trend__tooltip" role="tooltip">{{ title }}</span>
+    </span>
+    <span v-if="trend" class="trend__detail">
+      “{{ trend.keyword }}” · {{ trend.points_count }} points · {{ formatDate(trend.collected_at) }}
+    </span>
+  </div>
 </template>
 
 <style scoped>
+.trend {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: 0.25rem;
+}
+
 .pill {
+  position: relative;
   display: inline-flex;
   /* The footer is a grid, so an inline element would otherwise stretch full width. */
   justify-self: start;
@@ -41,6 +60,39 @@ const title = computed(() =>
   font-size: 0.78rem;
   font-weight: 550;
   color: var(--tone, var(--text-muted));
+}
+
+.trend__tooltip {
+  position: absolute;
+  z-index: 10;
+  bottom: calc(100% + 0.45rem);
+  left: 0;
+  width: max-content;
+  max-width: min(20rem, 75vw);
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: var(--surface);
+  box-shadow: 0 6px 18px rgb(15 23 42 / 14%);
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.2rem);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.pill:hover .trend__tooltip,
+.pill:focus-visible .trend__tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.trend__detail {
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
 .pill__dot {

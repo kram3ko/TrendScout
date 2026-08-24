@@ -59,6 +59,12 @@ shows that the deterministic fallback produced the result.
 
 ![Product dashboard with AI and formula scores](docs/images/dashboard.png)
 
+Trend cards expose the query, current relative interest (`0–100`), direction,
+sample count and collection time. The run status reports how many product trend
+snapshots were saved; it is not an interest score.
+
+![Collected Google Trends data with an explanatory tooltip](docs/images/trend-results.png)
+
 Sales Boost accepts past winners manually or from CSV and immediately uses
 category and keyword matches when the catalogue is rescored. Manual entries use
 the discovered Amazon category list, preventing silent mismatches between slugs
