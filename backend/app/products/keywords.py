@@ -56,10 +56,25 @@ STOPWORDS = frozenset(
 def tokenize(text: str) -> set[str]:
     """Meaningful lowercase tokens of a product title — the unit of keyword matching."""
     return {
-        token
+        _canonicalize(token)
         for token in TOKEN_RE.findall(text.lower())
         if len(token) >= MIN_TOKEN_LENGTH and token not in STOPWORDS
     }
+
+
+def _canonicalize(token: str) -> str:
+    if token.endswith("ies") and len(token) > 4:
+        token = f"{token[:-3]}y"
+    elif token.endswith(("ches", "shes", "xes", "zes")):
+        token = token[:-2]
+    elif token.endswith("s") and not token.endswith("ss") and len(token) > 4:
+        token = token[:-1]
+
+    for suffix in ("ing", "ers", "er", "ed"):
+        if token.endswith(suffix) and len(token) - len(suffix) >= 4:
+            stem = token[: -len(suffix)]
+            return stem[:-1] if len(stem) > 1 and stem[-1] == stem[-2] else stem
+    return token
 
 
 def trends_keyword(title: str) -> str:

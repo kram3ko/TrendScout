@@ -31,6 +31,16 @@ def test_single_shared_token_is_not_a_match():
     assert calculator.evaluate("Garden Gnome Statue", "home-garden").points == 0
 
 
+def test_word_forms_match_without_rewarding_a_generic_token() -> None:
+    calculator = BoostCalculator([past("Car Trunk Organizers", "automotive")])
+
+    related = calculator.evaluate("Trunk Organizing System for SUV", "Home & Kitchen")
+    generic = calculator.evaluate("Car Floor Mats", "Home & Kitchen")
+
+    assert related.points == KEYWORD_MATCH_POINTS
+    assert generic.points == 0
+
+
 def test_boost_is_capped_and_reports_the_matched_titles():
     history = [past(f"Garden Hose {index}", "lawn-garden") for index in range(5)]
 
