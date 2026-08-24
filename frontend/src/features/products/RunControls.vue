@@ -64,7 +64,8 @@ function describe(run: Run | undefined): string {
   if (!run) return "never run";
   if (run.status === "running") return "running now…";
   if (run.status === "success") {
-    return `${run.items_collected} item(s) · ${formatDate(run.finished_at)}`;
+    const noun = run.items_collected === 1 ? "product trend" : "product trends";
+    return `${run.items_collected} ${noun} saved · ${formatDate(run.finished_at)}`;
   }
   return `${run.status}: ${run.detail ?? "no detail"}`;
 }
