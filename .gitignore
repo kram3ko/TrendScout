@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.py[cod]
+.venv/
+.ruff_cache/
+.pytest_cache/
+node_modules/
+dist/
+frontend/vite.config.js
+frontend/vite.config.d.ts
+.DS_Store
+.idea/
