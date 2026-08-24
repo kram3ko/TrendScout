@@ -22,6 +22,7 @@ const categories = ref<AmazonCategory[]>([]);
 const selected = ref<string[]>([]);
 const loading = ref(true);
 const saving = ref(false);
+const expanded = ref(false);
 const pendingKind = ref<RunKind | null>(null);
 const error = ref("");
 const latestRuns = ref<Run[]>([]);
@@ -150,47 +151,67 @@ void Promise.all([loadCategories(), loadRuns()]);
         <h2>Amazon collection</h2>
         <p class="muted">Choose the Best Sellers departments used by manual and scheduled runs.</p>
       </div>
-      <button
-        class="button button--ghost"
-        type="button"
-        :disabled="browserRunActive || pendingKind !== null || saving"
-        @click="start('categories')"
-      >
-        {{ categories.length ? "Refresh categories" : "Discover categories" }}
-      </button>
+      <div class="amazon-settings__header-actions">
+        <span v-if="!loading && categories.length" class="selection-count">
+          {{ selected.length }} of {{ categories.length }} selected
+        </span>
+        <button
+          class="button button--ghost toggle-button"
+          type="button"
+          :aria-expanded="expanded"
+          aria-controls="amazon-category-panel"
+          @click="expanded = !expanded"
+        >
+          {{ expanded ? "Hide categories" : "Show categories" }}
+          <span class="toggle-button__icon" :data-expanded="expanded" aria-hidden="true">⌄</span>
+        </button>
+      </div>
     </header>
 
-    <p v-if="loading" class="muted amazon-settings__state">Loading categories…</p>
-    <div v-else-if="categories.length" class="category-list">
-      <label v-for="category in categories" :key="category.slug" class="category-option">
-        <input v-model="selected" type="checkbox" :value="category.slug" />
-        <span>{{ category.name }}</span>
-      </label>
+    <div v-if="expanded" id="amazon-category-panel" class="category-panel">
+      <div class="category-panel__toolbar">
+        <div class="selection-actions">
+          <button
+            class="text-button"
+            type="button"
+            :disabled="!categories.length || browserRunActive || pendingKind !== null"
+            @click="selectAll"
+          >
+            Select all
+          </button>
+          <button
+            class="text-button"
+            type="button"
+            :disabled="!selected.length || browserRunActive || pendingKind !== null"
+            @click="selected = []"
+          >
+            Clear
+          </button>
+        </div>
+        <button
+          class="text-button"
+          type="button"
+          :disabled="browserRunActive || pendingKind !== null || saving"
+          @click="start('categories')"
+        >
+          {{ categories.length ? "Refresh from Amazon" : "Discover categories" }}
+        </button>
+      </div>
+
+      <p v-if="loading" class="muted amazon-settings__state">Loading categories…</p>
+      <div v-else-if="categories.length" class="category-list">
+        <label v-for="category in categories" :key="category.slug" class="category-option">
+          <input v-model="selected" type="checkbox" :value="category.slug" />
+          <span>{{ category.name }}</span>
+        </label>
+      </div>
+      <p v-else class="amazon-settings__state muted">
+        Discover the current department list directly from Amazon, then select what to collect.
+      </p>
     </div>
-    <p v-else class="amazon-settings__state muted">
-      Discover the current department list directly from Amazon, then select what to collect.
-    </p>
 
     <footer class="amazon-settings__footer">
-      <div class="selection-actions">
-        <button
-          class="text-button"
-          type="button"
-          :disabled="!categories.length || browserRunActive || pendingKind !== null"
-          @click="selectAll"
-        >
-          Select all
-        </button>
-        <button
-          class="text-button"
-          type="button"
-          :disabled="!selected.length || browserRunActive || pendingKind !== null"
-          @click="selected = []"
-        >
-          Clear
-        </button>
-        <span class="muted">{{ selected.length }} selected</span>
-      </div>
+      <span class="muted footer-selection">{{ selected.length }} departments ready to scrape</span>
       <div class="amazon-settings__buttons">
         <button
           class="button button--ghost"
@@ -229,6 +250,7 @@ void Promise.all([loadCategories(), loadRuns()]);
 
 .amazon-settings__header,
 .amazon-settings__footer,
+.amazon-settings__header-actions,
 .amazon-settings__buttons,
 .selection-actions,
 .run-summary {
@@ -242,6 +264,11 @@ void Promise.all([loadCategories(), loadRuns()]);
   gap: 1rem;
 }
 
+.amazon-settings__header-actions {
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
 .amazon-settings__header h2 {
   font-size: 1rem;
 }
@@ -249,6 +276,46 @@ void Promise.all([loadCategories(), loadRuns()]);
 .amazon-settings__header p {
   margin: 0.2rem 0 0;
   font-size: 0.82rem;
+}
+
+.selection-count {
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.toggle-button {
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.toggle-button__icon {
+  display: inline-block;
+  font-size: 1rem;
+  line-height: 0.8;
+  transform: rotate(0deg);
+  transition: transform 160ms ease;
+}
+
+.toggle-button__icon[data-expanded="true"] {
+  transform: rotate(180deg);
+}
+
+.category-panel {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+.category-panel__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .category-list {
@@ -302,8 +369,8 @@ void Promise.all([loadCategories(), loadRuns()]);
   cursor: not-allowed;
 }
 
-.selection-actions span,
-.run-summary {
+.run-summary,
+.footer-selection {
   font-size: 0.78rem;
 }
 
@@ -324,6 +391,15 @@ void Promise.all([loadCategories(), loadRuns()]);
   .amazon-settings__footer {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .amazon-settings__header-actions,
+  .amazon-settings__buttons {
+    width: 100%;
+  }
+
+  .amazon-settings__header-actions {
+    justify-content: space-between;
   }
 
   .amazon-settings__buttons .button {
