@@ -121,3 +121,9 @@ asyncio_mode = "auto"
 pythonpath = ["."]
 testpaths = ["tests"]
 addopts = ["--strict-config", "--strict-markers"]
+filterwarnings = [
+    # google-genai 2.19.0 (latest) builds a Union alias from a private typing
+    # symbol that Python 3.17 removes. It is vendor-internal — no call site here
+    # can avoid it, so it is silenced at config level rather than per test.
+    "ignore:'_UnionGenericAlias' is deprecated:DeprecationWarning:google.genai.types",
+]

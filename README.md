@@ -16,6 +16,7 @@ No `.env`, no migrations, no user creation — the stack comes up ready to use.
 ## Contents
 
 - [What it does](#what-it-does)
+- [Interface](#interface)
 - [Architecture](#architecture)
 - [Database schema](#database-schema)
 - [Scoring](#scoring)
@@ -39,6 +40,21 @@ No `.env`, no migrations, no user creation — the stack comes up ready to use.
 | Manual trigger from the panel + a run every 6 hours | `backend/app/tasks/` |
 | Login, dashboard, Sales Boost page (CSV + manual form) | `frontend/src/features/` |
 | Automatic, light and dark interface themes | `frontend/src/shared/theme.ts` |
+
+---
+
+## Interface
+
+The dashboard keeps collection controls, filters, score provenance and the
+written rationale together. `AI score` identifies an LLM verdict; `Formula`
+shows that the deterministic fallback produced the result.
+
+![Product dashboard with AI and formula scores](docs/images/dashboard.png)
+
+Sales Boost accepts past winners manually or from CSV and immediately uses
+category and keyword matches when the catalogue is rescored.
+
+![Sales Boost product history and import form](docs/images/sales-boost.png)
 
 ---
 
@@ -202,7 +218,7 @@ override one.
 |---|---|---|
 | `APP_PORT` | `8080` | published port for the dashboard |
 | `BOOTSTRAP_USERNAME` / `BOOTSTRAP_PASSWORD` | `admin` / `admin123` | seeded on every startup, idempotent |
-| `SECRET_KEY` | `change-me-in-production` | JWT signing key |
+| `SECRET_KEY` | `change-me-before-exposing-this-service` | JWT signing key |
 | `COOKIE_SECURE` | `false` | set to `true` behind HTTPS |
 | `LLM_PROVIDER` | `gemini` | `gemini` · `anthropic` · `openai` · `none` |
 | `LLM_API_KEY` | *(empty)* | **empty ⇒ deterministic formula, the app still runs** |

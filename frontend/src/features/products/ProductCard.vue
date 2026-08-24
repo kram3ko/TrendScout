@@ -101,6 +101,7 @@ defineProps<{ product: Product }>();
 }
 
 .product__titles {
+  flex: 1;
   min-width: 0;
 }
 

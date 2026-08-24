@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any, cast
 
-from sqlalchemy import select, update
+from sqlalchemy import CursorResult, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.scraping.enums import RunKind, RunStatus
@@ -53,7 +54,8 @@ class RunService:
         return await self._session.scalar(statement)
 
     async def close_abandoned(self) -> int:
-        result = await self._session.execute(
+        """DML always yields a CursorResult; the generic Result type hides `rowcount`."""
+        statement = (
             update(ScrapeRun)
             .where(ScrapeRun.status == RunStatus.RUNNING)
             .values(
@@ -62,5 +64,6 @@ class RunService:
                 finished_at=datetime.now(UTC),
             )
         )
+        result = cast(CursorResult[Any], await self._session.execute(statement))
         await self._session.commit()
         return result.rowcount

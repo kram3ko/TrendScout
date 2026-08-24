@@ -28,7 +28,7 @@ async def select_amazon_categories(
         selected = await categories.set_enabled(payload.slugs)
     except UnknownCategoryError as error:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Unknown Amazon categories: {error}",
         ) from error
     return [AmazonCategoryRead.model_validate(category) for category in selected]
